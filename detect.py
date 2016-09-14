@@ -1,6 +1,6 @@
 '''
-This code has been modified from code written by
-Adrian Rosebrock of pyimagesearch
+This code has been modified from code written by Adrian Rosebrock
+of pyimagesearch
 
 The original can be found at:
 http://www.pyimagesearch.com/2015/09/14/ball-tracking-with-opencv/
@@ -151,8 +151,18 @@ while True:
         "Left:      {10}\n"
         "Right:     {11}\n"
         "{0}"
-    ).format('=' * 40, '-' * 40, None, None, None, None,
-             None, None, None, None, None, None)
+    ).format('=' * 40, '-' * 40,
+             None, None, None,
+             None,
+
+             None,
+             None,
+
+             None,
+             None,
+
+             None,
+             None)
 
     # print message
 
