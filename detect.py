@@ -11,9 +11,11 @@ http://www.pyimagesearch.com/2015/09/14/ball-tracking-with-opencv/
 # python ball_tracking.py
 
 # import the necessary packages
-from collections import deque
-# from time import sleep
-from math import hypot
+# from collections import deque
+from time import sleep
+# from math import hypot
+from math import atan
+from math import pi
 import numpy as np
 import argparse
 import imutils
@@ -30,12 +32,17 @@ args = vars(ap.parse_args())
 # define the lower and upper boundaries of the "green"
 # ball in the HSV color space, then initialize the
 # list of tracked points
-balls = 3
-greenLower = (21, 24, 110)
-greenUpper = (65, 120, 255)
-pts = [deque(maxlen=args["buffer"]),
-       deque(maxlen=args["buffer"]),
-       deque(maxlen=args["buffer"])]
+balls = 10
+greenLower = (24, 40, 168)
+greenUpper = (49, 229, 255)
+# pts = [deque(maxlen=args["buffer"]),
+#        deque(maxlen=args["buffer"]),
+#        deque(maxlen=args["buffer"]),
+#        deque(maxlen=args["buffer"]),
+#        deque(maxlen=args["buffer"]),
+#        deque(maxlen=args["buffer"]),
+#        deque(maxlen=args["buffer"]),
+#        deque(maxlen=args["buffer"])]
 
 # if a video path was not supplied, grab the reference
 # to the webcam
@@ -90,7 +97,7 @@ while True:
             centers[i] = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
 
             # only proceed if the radius meets a minimum size
-            if radii[i] > 10:
+            if radii[i] > 5:
                 drawBGR = np.uint8([[[255 / (balls - 1) * i, 255, 255]]])
                 BGRlist = cv2.cvtColor(drawBGR, cv2.COLOR_HSV2BGR)[0][0]
                 (h, s, v) = (int(BGRlist[0]),
@@ -99,36 +106,37 @@ while True:
                 # draw the circle and centroid on the frame,
                 # then update the list of tracked points
                 cv2.circle(frame, (int(x), int(y)), int(radii[i]),
-                           (0, 255, 255), 2)
+                           (0, 0, 255), 2)
                 cv2.circle(frame, centers[i], 5, (h, s, v), -1)
 
-    # update the points queue
-    for i in xrange(0, balls):
-        pts[i].appendleft(centers[i])
+    # # update the points queue
+    # for i in xrange(0, balls):
+    #     pts[i].appendleft(centers[i])
 
-    for i in xrange(0, balls):
-        # loop over the set of tracked points
-        for j in xrange(1, len(pts[i])):
-            # if either of the tracked points are None, ignore
-            # them
-            if pts[i][j - 1] is None or pts[i][j] is None:
-                continue
+    # for i in xrange(0, balls):
+    #     # loop over the set of tracked points
+    #     for j in xrange(1, len(pts[i])):
+    #         # if either of the tracked points are None, ignore
+    #         # them
+    #         if pts[i][j - 1] is None or pts[i][j] is None:
+    #             continue
 
-            # otherwise, compute the thickness of the line and
-            # draw the connecting lines
-            drawBGR = np.uint8([[[255 / (balls - 1) * i, 255, 255]]])
-            BGRlist = cv2.cvtColor(drawBGR, cv2.COLOR_HSV2BGR)[0][0]
-            (h, s, v) = (int(BGRlist[0]),
-                         int(BGRlist[1]),
-                         int(BGRlist[2]))
+    #         # otherwise, compute the thickness of the line and
+    #         # draw the connecting lines
+    #         drawBGR = np.uint8([[[255 / (balls - 1) * i, 255, 255]]])
+    #         BGRlist = cv2.cvtColor(drawBGR, cv2.COLOR_HSV2BGR)[0][0]
+    #         (h, s, v) = (int(BGRlist[0]),
+    #                      int(BGRlist[1]),
+    #                      int(BGRlist[2]))
 
-            thickness = int(np.sqrt(args["buffer"] / float(j + 1)) * 2.5)
-            x1 = pts[i][j - 1][0]
-            y1 = pts[i][j - 1][1]
-            x2 = pts[i][j][0]
-            y2 = pts[i][j][1]
-            if hypot(x2 - x1, y2 - y1) < 100:
-                cv2.line(frame, pts[i][j - 1], pts[i][j], (h, s, v), thickness)
+    #         thickness = int(np.sqrt(args["buffer"] / float(j + 1)) * 2.5)
+    #         x1 = pts[i][j - 1][0]
+    #         y1 = pts[i][j - 1][1]
+    #         x2 = pts[i][j][0]
+    #         y2 = pts[i][j][1]
+    #         if hypot(x2 - x1, y2 - y1) < 100:
+    #             cv2.line(frame, pts[i][j - 1], pts[i][j],
+    #                      (h, s, v), thickness)
 
     # show the frame to our screen
     cv2.imshow("Frame", frame)
@@ -138,37 +146,63 @@ while True:
     if key == ord("q"):
         break
 
-    # print center
-    message = string = (
-        "{0}\n"
-        "Location: ({2}, {3}, {4})\n"
-        "Radius:    {5}\n"
-        "{1}\n"
-        "Angle:     {6}\n"
-        "Distance:  {7}\n"
-        "{1}\n"
-        "Direction: {8}\n"
-        "Speed:     {9}\n"
-        "{1}\n"
-        "Left:      {10}\n"
-        "Right:     {11}\n"
-        "{0}"
-    ).format('=' * 40, '-' * 40,
-             None, None, None,
-             None,
-
-             None,
-             None,
-
-             None,
-             None,
-
-             None,
-             None)
-
     # print message
+    if not(centers[0] is None or len(frame[0]) is None):
+        deltay = float(frame.shape[0]) - float(centers[0][1])
+        deltax = float(centers[0][0]) - float(frame.shape[1]) / 2
+        angle = pi / 2 if deltax == 0 else atan(deltay / deltax)
 
-    # sleep(0.25)
+        k = 1000.0  # Need to find empirically
+
+        distance = 50.0 if radii[0] ** 2.0 == 0.0 else k / radii[0] ** 2.0
+
+        centred = 1.27
+        if (abs(angle) > centred or distance < 1):
+            direction = "Forward"
+        else:
+            direction = "Turn"
+
+        speed = "100%" if distance > 2 else "50%"
+
+        if direction == "Forward":
+            left, right = speed, speed
+        elif angle > 0:
+            right = "50%" if speed == "100%" else "25%"
+            left = speed
+        else:
+            right = speed
+            left = "50%" if speed == "100%" else "25%"
+
+        message = string = (
+            "{0}\n"
+            "Location: ({2}, {3})\n"
+            "Radius:    {4}\n"
+            "{1}\n"
+            "Angle:     {5}\n"
+            "Distance:  {6}\n"
+            "{1}\n"
+            "Direction: {7}\n"
+            "Speed:     {8}\n"
+            "{1}\n"
+            "Left:      {9}\n"
+            "Right:     {10}\n"
+            "{0}"
+        ).format('=' * 40, '-' * 40,
+                 centers[0][0], centers[0][1],
+                 radii[0],
+
+                 angle,
+                 distance,
+
+                 direction,
+                 speed,
+
+                 left,
+                 right)
+
+        print message
+
+    # sleep(0.5)
 
 # cleanup the camera and close any open windows
 camera.release()
