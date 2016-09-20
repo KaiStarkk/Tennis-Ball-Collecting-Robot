@@ -9,6 +9,7 @@
 
 import cv2
 import argparse
+import imutils
 from operator import xor
 
 
@@ -66,6 +67,7 @@ def main():
 
     if args['image']:
         image = cv2.imread(args['image'])
+        image = imutils.resize(image, 400, 400)
 
         if range_filter == 'RGB':
             frame_to_thresh = image.copy()
@@ -90,7 +92,8 @@ def main():
 
         v1_min, v2_min, v3_min, v1_max, v2_max, v3_max = get_trackbar_values(range_filter)
 
-        thresh = cv2.inRange(frame_to_thresh, (v1_min, v2_min, v3_min), (v1_max, v2_max, v3_max))
+        thresh = cv2.inRange(frame_to_thresh, (v1_min, v2_min, v3_min),
+                             (v1_max, v2_max, v3_max))
 
         if args['preview']:
             preview = cv2.bitwise_and(image, image, mask=thresh)
